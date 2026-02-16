@@ -2586,3 +2586,121 @@ echo "Projekt vytvořen v /srv/projects/$PROJ_NAME"
 Gratuluji! Nyní máš profesionální, vizuálně sladěný a modulární systém, který slouží jako server, bezpečnostní laboratoř i vývojové prostředí v jednom. Stačí potvrdit, zda chceš vygenerovat specifické knihovny pro konkrétní typ projektu (např. seznam všech AI knihoven pro RPi 5).
 
 
+V souboru jsem si prostudoval tvou verzi v3.0, která tvoří skvělý základ pro StarkOS / Genesis. Nyní tento projekt dokončíme a povýšíme na verzi v5.0 – Ultimate Edition.
+Zde je kompletní řešení zahrnující nové moduly, vizuální upgrade a finální instalační balíček.
+🚀 Nové moduly a rozšíření
+1. Kali/NetHunter Layer
+Tento modul neinstaluje celý systém Kali, ale přidá jeho repozitáře a klíče přímo do tvého RPi OS. Umožní ti instalovat jakýkoliv nástroj (nmap, metasploit, aircrack) vedle tvých standardních aplikací.
+2. Project Switcher (RPI 5 Optimální)
+Skript project.sh přepne tvé prostředí podle toho, na čem zrovna pracuješ. Načte specifické knihovny pro RPi 5:
+ * AI/ML: tflite-runtime, opencv-python, torch, numpy.
+ * Web/Cloud: docker-ce, nginx, nodejs, certbot.
+ * IoT: paho-mqtt, node-red, gpiozero.
+3. Genesis Creator
+Inteligentní průvodce v terminálu, který ti vygeneruje kostru tvého programu (struktura složek, základní kód, README, .gitignore).
+🎨 Vizuální Upgrade (Cyber-Dark Look)
+Pro terminál použijeme speciální barevnou paletu pro whiptail (modrá/černá/šedá), aby systém působil moderněji. Pro Web UI použijeme Glassmorphism (skleněný efekt) s tmavým režimem.
+📦 Finální balíček souborů
+Zde je kompletní výpis souborů, které tvoří tvůj nový systém.
+1️⃣ config.json (Rozšířený)
+{
+  "image_url": "https://downloads.raspberrypi.com/raspios_lite_arm64/latest",
+  "target_disk": "/dev/nvme0n1",
+  "hostname": "genesis-stark",
+  "username": "admin",
+  "password": "tvoje_heslo",
+  "modules": {
+    "kali": true,
+    "ai_ml": true,
+    "web_cloud": true,
+    "iot": true
+  },
+  "web_port": 8443
+}
+
+2️⃣ installer.sh (Jádro s Kali integrací)
+#!/bin/bash
+# StarkOS Installer v5.0
+set -e
+source config.json
+
+echo "[INFO] Startujeme instalaci StarkOS..."
+
+# --- KALI INTEGRACE ---
+if [ "$(jq -r .modules.kali config.json)" == "true" ]; then
+    echo "[KALI] Přidávám Kali Linux repozitáře..."
+    wget -q -O - https://archive.kali.org/archive-key.asc | gpg --dearmor > /usr/share/keyrings/kali-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/kali-archive-keyring.gpg] http://http.kali.org/kali kali-rolling main contrib non-free" > /etc/apt/sources.list.d/kali.list
+    apt update && apt install -y kali-linux-top10
+fi
+
+# --- PROJECT SWITCHER INSTALACE ---
+cat <<EOF > /usr/local/bin/project
+#!/bin/bash
+case \$1 in
+  ai) apt install -y python3-opencv python3-numpy tflite-runtime ;;
+  web) apt install -y docker.io nginx nodejs ;;
+  iot) apt install -y node-red paho-mqtt ;;
+  *) echo "Použití: project [ai|web|iot]" ;;
+esac
+EOF
+chmod +x /usr/local/bin/project
+
+3️⃣ webui.py (Vylepšený design)
+from flask import Flask, render_template_string
+import psutil
+
+app = Flask(__name__)
+
+STYLE = """
+<style>
+    body { background: #0a0a0a; color: #00f2ff; font-family: 'Courier New', monospace; }
+    .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); 
+             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 20px; }
+    .stat-box { display: inline-block; width: 30%; text-align: center; }
+</style>
+"""
+
+@app.route("/")
+def dashboard():
+    stats = f"CPU: {psutil.cpu_percent()}% | RAM: {psutil.virtual_memory().percent}%"
+    return render_template_string(f"{STYLE}<div class='glass'><h1>STARK OS DASHBOARD</h1><p>{stats}</p></div>")
+
+app.run(host="0.0.0.0", port=8443)
+
+4️⃣ genesis_creator.sh (Průvodce programem)
+#!/bin/bash
+# Genesis Creator - Terminal Guide
+NAME=$(whiptail --inputbox "Název tvého programu:" 8 40 3>&1 1>&2 2>&3)
+LANG=$(whiptail --menu "Vyber jazyk:" 15 40 4 "1" "Python" "2" "Bash" "3" "NodeJS" 3>&1 1>&2 2>&3)
+
+mkdir -p ~/projects/$NAME
+cd ~/projects/$NAME
+git init
+touch README.md main.sh
+echo "Projekt $NAME vytvořen v ~/projects/$NAME"
+
+🛠 Postup instalace (Od nuly)
+ * Boot z SD karty: Nabootuj své RPi 5 s čistým DietPi nebo RPi OS Lite.
+ * Stažení skriptů: Vytvoř složku mkdir genesis && cd genesis a nahraj do ní výše uvedené soubory.
+ * Nastavení vzhledu terminálu:
+   export NEWT_COLORS='window=,black border=white,black textbox=white,black button=black,cyan'
+
+ * Spuštění:
+   chmod +x *.sh
+sudo ./installer.sh
+
+ * Přístup: Po restartu běž na http://IP_RPI:8443 pro vizuální dashboard.
+🤖 Prompt pro Claude (Optimalizace projektu)
+Tento prompt zkopíruj a vlož do aplikace Claude pro další vylepšení:
+> "Jsi expertní systémový inženýr pro Raspberry Pi 5. Máme projekt 'StarkOS / Genesis', což je unattended installer pro NVMe s moduly pro Kali Linux, AI/ML (TFLite, OpenCV) a IoT.
+> Úkol:
+>  * Zkontroluj přiložené kódy (installer.sh, webui.py, config.json) na bezpečnost a efektivitu na architektuře ARM64.
+>  * Implementuj pokročilou validaci config.json pomocí Pythonu.
+>  * Vylepši webui.py o real-time grafy (pomocí Chart.js) pro sledování teploty CPU a IO zápisu na NVMe.
+>  * Navrhni automatizovaný backup systém, který jednou týdně nahraje obraz disku na vzdálený SMB/NFS server.
+>  * Optimalizuj 'Project Switcher' tak, aby automaticky spravoval i virtuální prostředí Pythonu (venv) pro každý typ projektu."
+> 
+Chceš, abych rovnou vylepšil i ty real-time grafy v kódu, nebo začneš instalací základní verze?
+
+
